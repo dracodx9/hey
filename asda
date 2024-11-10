@@ -1,0 +1,166 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "SPIDER.CC",
+   LoadingTitle = "SPIDER.CC",
+   LoadingSubtitle = "by Draco",
+   Theme = "DarkBlue", -- DarkBlue, Green, Light, Default - more coming soon!
+
+   DisableRayfieldPrompts = false,
+
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = nil, -- Create a custom folder for your hub/game
+      FileName = "Big Hub"
+   },
+
+   Discord = {
+      Enabled = false, -- Prompt the user to join your Discord server if their executor supports it
+      Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD
+      RememberJoins = true -- Set this to false to make them join the discord every time they load it up
+   },
+
+   KeySystem = false, -- Set this to true to use our key system
+   KeySettings = {
+      Title = "SPIDER.CC",
+      Subtitle = "Key System",
+      Note = "be friends with draco", -- Use this to tell the user how to get a key
+      FileName = "dracoissexy", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
+      SaveKey = false, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+      GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+      Key = {"Hello"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+   }
+})
+
+local MainTab = Window:CreateTab("main", nil) -- Title, Image
+
+local Button = MainTab:CreateButton({
+   Name = "pull vector",
+   Callback = function()
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local player = game.Players.LocalPlayer
+
+-- Function to find the football object dynamically
+local function getFootball()
+    for _, gameContainer in pairs(game.Workspace.Games:GetChildren()) do
+        local footballInstance = gameContainer:FindFirstChild("Replicated") and gameContainer.Replicated:FindFirstChild("Football")
+        if footballInstance then
+            return footballInstance
+        end
+    end
+    return nil
+end
+
+-- Function to pull the player in front of the football
+local function pullInFrontOfFootball()
+    local footballInstance = getFootball()
+
+    if footballInstance and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local playerHRP = player.Character.HumanoidRootPart
+        local runService = game:GetService("RunService")
+        
+        -- Make the movement ultra fast
+        local moveTime = 0.02  -- Extremely fast movement (lower value = faster)
+        
+        local tweenInfo = TweenInfo.new(
+            moveTime,  
+            Enum.EasingStyle.Linear,  
+            Enum.EasingDirection.Out,  
+            0,  
+            false,  
+            0  
+        )
+
+        -- Keep updating while the player holds the mouse button
+        while footballInstance and player.Character and playerHRP and playerHRP.Parent and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+            local footballCFrame = footballInstance.CFrame
+            local footballVelocity = footballInstance.AssemblyLinearVelocity  -- Get the velocity of the football
+            local direction = footballVelocity.Unit  -- Normalize the velocity to get the direction the football is moving
+
+            -- Move in front of the football by adding a small offset to the direction the ball is traveling
+            local offset = direction * 15  -- Slightly increased the distance to 6 studs ahead
+            local targetPosition = footballCFrame.Position + offset  -- This places the player ahead of the ball
+
+            -- Create the goal position continuously as the football moves
+            local goal = { CFrame = CFrame.new(targetPosition) }
+
+            -- Create and play a new tween to move the player smoothly
+            local tween = TweenService:Create(playerHRP, tweenInfo, goal)
+            tween:Play()
+
+            tween.Completed:Wait()
+
+            -- Extremely short delay for the fastest possible updates
+            wait(0.02)  -- Set to 0.01 for faster, continuous updates (this will make the movement very responsive)
+        end
+    else
+        warn("Football object or player's character not found!")
+    end
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        pullInFrontOfFootball()
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        -- Optionally, handle mouse button release if you want to stop pulling
+    end
+end)
+
+   end,
+})
+
+local Button = MainTab:CreateButton({
+   Name = "head tap(G)",
+   Callback = function()
+   -- LocalScript placed inside StarterPlayerScripts
+
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local uis = game:GetService("UserInputService")
+
+-- Function to find the closest player's head
+local function getClosestPlayer()
+    local closestPlayer = nil
+    local closestDistance = math.huge -- Start with a very large number
+
+    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+        if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("Head") then
+            local distance = (player.Character.HumanoidRootPart.Position - otherPlayer.Character.Head.Position).Magnitude
+            if distance < closestDistance then
+                closestDistance = distance
+                closestPlayer = otherPlayer
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+-- Function to teleport to the closest player's head
+local function teleportToClosestPlayerHead()
+    local closestPlayer = getClosestPlayer()
+    if closestPlayer then
+        local head = closestPlayer.Character.Head
+        if head then
+            player.Character:SetPrimaryPartCFrame(head.CFrame)
+        end
+    end
+end
+
+-- Listen for key press ("G" key)
+uis.InputBegan:Connect(function(input, gameProcessedEvent)
+    if gameProcessedEvent then return end  -- Ignore input that the game processed
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.G then
+        teleportToClosestPlayerHead()
+    end
+end)
+
+   end,
+})
